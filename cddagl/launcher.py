@@ -23,22 +23,10 @@ from cddagl.i18n import (
 from cddagl.sql.functions import init_config, get_config_value, config_true
 from cddagl.ui.views.dialogs import ExceptionWindow
 from cddagl.ui.views.tabbed import TabbedWindow
-from cddagl.win32 import get_ui_locale, SingleInstance, write_named_pipe
+#from cddagl.win32 import get_ui_locale, SingleInstance, write_named_pipe
+from cddagl.helpers import get_ui_locale
 
 logger = logging.getLogger('cddagl')
-
-
-def init_single_instance():
-    if not config_true(get_config_value('allow_multiple_instances', 'False')):
-        single_instance = SingleInstance()
-
-        if single_instance.aleradyrunning():
-            write_named_pipe('cddagl_instance', b'dupe')
-            sys.exit(0)
-
-        return single_instance
-
-    return None
 
 
 def get_preferred_locale(available_locales):
@@ -128,13 +116,13 @@ def handle_exception(extype, value, tb):
     ui_exception(extype, value, tb)
 
 
-def start_ui(locale, single_instance):
+def start_ui(locale):
     load_gettext_locale(get_locale_path(), locale)
 
     main_app = QApplication(sys.argv)
     main_app.setWindowIcon(QIcon(get_resource_path('launcher.ico')))
 
-    main_app.single_instance = single_instance
+    #main_app.single_instance = single_instance
     main_app.app_locale = locale
 
     main_win = TabbedWindow('CDDA Game Launcher')
@@ -174,8 +162,9 @@ def run_cddagl():
 
     init_config(get_cddagl_path())
 
-    start_ui(get_preferred_locale(get_available_locales(get_locale_path())),
-             init_single_instance())
+    #start_ui(get_preferred_locale(get_available_locales(get_locale_path())),
+    #         init_single_instance())
+    start_ui(get_preferred_locale(get_available_locales(get_locale_path())))
 
 
 if __name__ == '__main__':

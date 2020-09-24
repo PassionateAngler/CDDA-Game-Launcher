@@ -7,8 +7,6 @@ cssselect
 arrow
 rarfile
 Babel
-pypiwin32
-pywinutils
 Markdown
 Werkzeug
 

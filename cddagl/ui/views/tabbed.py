@@ -19,7 +19,7 @@ from PyQt5.QtWidgets import (
     QAction, QDialog, QTabWidget, QCheckBox, QMessageBox, QMenu
 )
 from PyQt5.QtGui import QDesktopServices
-from pywintypes import error as PyWinError
+#from pywintypes import error as PyWinError
 
 import cddagl.constants as cons
 from cddagl import __version__ as version
@@ -34,7 +34,7 @@ from cddagl.ui.views.mods import ModsTab
 from cddagl.ui.views.settings import SettingsTab
 from cddagl.ui.views.soundpacks import SoundpacksTab
 from cddagl.ui.views.tilesets import TilesetsTab
-from cddagl.win32 import SimpleNamedPipe
+#from cddagl.win32 import SimpleNamedPipe
 
 logger = logging.getLogger('cddagl')
 
@@ -64,9 +64,9 @@ class TabbedWindow(QMainWindow):
 
         self.setWindowTitle(title)
 
-        if not config_true(get_config_value('allow_multiple_instances',
-            'False')):
-            self.init_named_pipe()
+        #if not config_true(get_config_value('allow_multiple_instances',
+        #    'False')):
+        #    self.init_named_pipe()
 
     def set_text(self):
         self.file_menu.setTitle(_('&File'))
@@ -329,45 +329,6 @@ class TabbedWindow(QMainWindow):
 
     def lv_http_ready_read(self):
         self.lv_html.write(self.http_reply.readAll())
-
-    def init_named_pipe(self):
-        class PipeReadWaitThread(QThread):
-            read = pyqtSignal(bytes)
-
-            def __init__(self):
-                super(PipeReadWaitThread, self).__init__()
-
-                try:
-                    self.pipe = SimpleNamedPipe('cddagl_instance')
-                except (OSError, PyWinError):
-                    self.pipe = None
-
-            def __del__(self):
-                self.wait()
-
-            def run(self):
-                if self.pipe is None:
-                    return
-
-                while self.pipe is not None:
-                    if self.pipe.connect() and self.pipe is not None:
-                        try:
-                            value = self.pipe.read(1024)
-                            self.read.emit(value)
-                        except (PyWinError, IOError):
-                            pass
-
-        def instance_read(value):
-            if value == b'dupe':
-                self.showNormal()
-                self.raise_()
-                self.activateWindow()
-
-        pipe_read_wait_thread = PipeReadWaitThread()
-        pipe_read_wait_thread.read.connect(instance_read)
-        pipe_read_wait_thread.start()
-
-        self.pipe_read_wait_thread = pipe_read_wait_thread
 
     def showEvent(self, event):
         if not self.shown:
