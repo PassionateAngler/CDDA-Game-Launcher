@@ -1,0 +1,25 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+alembic = "*"
+pyinstaller = "*"
+html5lib = "*"
+cssselect = "*"
+arrow = "*"
+rarfile = "*"
+lxml = "*"
+pylzma = "*"
+SQLAlchemy = "*"
+PyQt5 = "*"
+Babel = "*"
+Markdown = "*"
+Werkzeug = "*"
+psutil = "*"
+
+[requires]
+python_version = "3.8"
