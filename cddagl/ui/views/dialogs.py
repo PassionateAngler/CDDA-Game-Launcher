@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import (
 import cddagl.constants as cons
 from cddagl import __version__ as version
 from cddagl.constants import get_resource_path
-from cddagl.functions import clean_qt_path, bitness
+from cddagl.functions import bitness
 from cddagl.i18n import proxy_gettext as _
 #from cddagl.win32 import get_downloads_directory
 
@@ -115,7 +115,7 @@ class BrowserDownloadDialog(QDialog):
             _('Archive files {formats}').format(formats='(*.zip *.rar *.7z)'),
             options=options)
         if selected_file:
-            self.download_path_le.setText(clean_qt_path(selected_file))
+            self.download_path_le.setText(selected_file)
 
     def install_clicked(self):
         choosen_file = self.download_path_le.text()

@@ -37,7 +37,7 @@ from cddagl.constants import get_cddagl_path, get_cdda_uld_path
 from cddagl import __version__ as version
 from cddagl.functions import (
     tryint, move_path, is_64_windows, sizeof_fmt, delete_path,
-    clean_qt_path, unique, log_exception, ensure_slash, safe_humanize
+    unique, log_exception, ensure_slash, safe_humanize
 )
 from cddagl.i18n import proxy_ngettext as ngettext, proxy_gettext as _
 from cddagl.sql.functions import (
@@ -47,6 +47,8 @@ from cddagl.sql.functions import (
 #from cddagl.win32 import (
 #   find_process_with_file_handle, activate_window, process_id_from_path, wait_for_pid
 #)
+
+from cddagl.helpers import process_id_from_path
 
 logger = logging.getLogger('cddagl')
 
@@ -578,8 +580,9 @@ antivirus whitelist or select the action to trust this binary when detected.</p>
         directory = QFileDialog.getExistingDirectory(self,
                 _('Game directory'), self.dir_combo.currentText(),
                 options=options)
+
         if directory:
-            self.set_dir_combo_value(clean_qt_path(directory))
+            self.set_dir_combo_value(directory)
 
     def dc_index_changed(self, index):
         if self.shown and not self.dir_combo_inserting:
@@ -626,8 +629,8 @@ antivirus whitelist or select the action to trust this binary when detected.</p>
             self.restore_button.setEnabled(os.path.isdir(previous_version_dir))
 
             # Find the executable
-            console_exe = os.path.join(directory, 'cataclysm.exe')
-            tiles_exe = os.path.join(directory, 'cataclysm-tiles.exe')
+            console_exe = os.path.join(directory, 'cataclysm')
+            tiles_exe = os.path.join(directory, 'cataclysm-tiles')
 
             exe_path = None
             version_type = None

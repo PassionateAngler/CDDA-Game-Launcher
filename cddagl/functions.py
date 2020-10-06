@@ -36,9 +36,6 @@ def unique(seq):
             seen.add(x)
             yield x
 
-def clean_qt_path(path):
-    return path.replace('/', '\\')
-
 def safe_filename(filename):
     keepcharacters = (' ', '.', '_', '-')
     return ''.join(c for c in filename if c.isalnum() or c in keepcharacters
