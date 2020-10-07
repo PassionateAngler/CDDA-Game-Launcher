@@ -10,7 +10,7 @@ import subprocess
 import sys
 import tempfile
 import xml.etree.ElementTree
-import zipfile
+import tarfile
 import random
 
 from collections import deque
@@ -1027,8 +1027,10 @@ antivirus whitelist or select the action to trust this binary when detected.</p>
         self.previous_exe_path = self.exe_path
         self.exe_path = None
 
-        console_exe = os.path.join(game_dir, 'cataclysm.exe')
-        tiles_exe = os.path.join(game_dir, 'cataclysm-tiles.exe')
+        console_exe = os.path.join(game_dir, 'cataclysm')
+        tiles_exe = os.path.join(game_dir, 'cataclysm-tiles')
+        print("DEBUG: console ", console_exe)
+        print("DEBUG: tiles_exe ", tiles_exe)
 
         exe_path = None
         version_type = None
@@ -1219,22 +1221,22 @@ class UpdateGroupBox(QGroupBox):
         platform_button_group = QButtonGroup()
         self.platform_button_group = platform_button_group
 
-        x64_radio_button = QRadioButton()
-        layout.addWidget(x64_radio_button, layout_row, 1)
-        self.x64_radio_button = x64_radio_button
-        platform_button_group.addButton(x64_radio_button)
+        # x64_radio_button = QRadioButton()
+        # layout.addWidget(x64_radio_button, layout_row, 1)
+        # self.x64_radio_button = x64_radio_button
+        # platform_button_group.addButton(x64_radio_button)
 
-        platform_button_group.buttonClicked.connect(self.platform_clicked)
+        # platform_button_group.buttonClicked.connect(self.platform_clicked)
 
-        if not is_64_windows():
-            x64_radio_button.setEnabled(False)
+        # if not is_64_windows():
+        #     x64_radio_button.setEnabled(False)
 
-        x86_radio_button = QRadioButton()
-        layout.addWidget(x86_radio_button, layout_row, 2)
-        self.x86_radio_button = x86_radio_button
-        platform_button_group.addButton(x86_radio_button)
+        # x86_radio_button = QRadioButton()
+        # layout.addWidget(x86_radio_button, layout_row, 2)
+        # self.x86_radio_button = x86_radio_button
+        # platform_button_group.addButton(x86_radio_button)
 
-        layout_row = layout_row + 1
+        # layout_row = layout_row + 1
 
         available_builds_label = QLabel()
         layout.addWidget(available_builds_label, layout_row, 0, Qt.AlignRight)
@@ -1318,9 +1320,6 @@ class UpdateGroupBox(QGroupBox):
         self.branch_label.setText(_('Branch:'))
         self.stable_radio_button.setText(_('Stable'))
         self.experimental_radio_button.setText(_('Experimental'))
-        self.platform_label.setText(_('Platform:'))
-        self.x64_radio_button.setText('{so} ({bit})'.format(so=_('Windows x64'), bit=_('64-bit')))
-        self.x86_radio_button.setText('{so} ({bit})'.format(so=_('Windows x86'), bit=_('32-bit')))
         self.available_builds_label.setText(_('Available builds:'))
         self.find_build_label.setText(_('Find build #:'))
         self.find_build_button.setText(_('Add to list'))
@@ -1341,24 +1340,6 @@ class UpdateGroupBox(QGroupBox):
                 self.stable_radio_button.setChecked(True)
             elif branch == cons.CONFIG_BRANCH_EXPERIMENTAL:
                 self.experimental_radio_button.setChecked(True)
-
-            platform = get_config_value('platform')
-
-            if platform == 'Windows x64':
-                platform = 'x64'
-            elif platform == 'Windows x86':
-                platform = 'x86'
-
-            if platform is None or platform not in ('x64', 'x86'):
-                if is_64_windows():
-                    platform = 'x64'
-                else:
-                    platform = 'x86'
-
-            if platform == 'x64':
-                self.x64_radio_button.setChecked(True)
-            elif platform == 'x86':
-                self.x86_radio_button.setChecked(True)
 
             self.refresh_builds()
 
@@ -1661,7 +1642,7 @@ class UpdateGroupBox(QGroupBox):
 
                 status_bar.busy -= 1
 
-                self.extracting_zipfile.close()
+                self.extracting_tarfile.close()
 
                 download_dir = os.path.dirname(self.downloaded_file)
                 delete_path(download_dir)
@@ -1799,7 +1780,7 @@ class UpdateGroupBox(QGroupBox):
                 return
 
             download_dir = tempfile.mkdtemp(prefix=cons.TEMP_PREFIX)
-
+            print("ptt: Download dir: ", download_dir)
             download_url = self.selected_build['url']
 
             url = QUrl(download_url)
@@ -1883,9 +1864,6 @@ class UpdateGroupBox(QGroupBox):
         self.stable_radio_button.setEnabled(False)
         self.experimental_radio_button.setEnabled(False)
 
-        self.x64_radio_button.setEnabled(False)
-        self.x86_radio_button.setEnabled(False)
-
         self.previous_bc_enabled = self.builds_combo.isEnabled()
         self.builds_combo.setEnabled(False)
         self.refresh_builds_button.setEnabled(False)
@@ -1899,10 +1877,6 @@ class UpdateGroupBox(QGroupBox):
     def enable_controls(self, builds_combo=False):
         self.stable_radio_button.setEnabled(True)
         self.experimental_radio_button.setEnabled(True)
-
-        if is_64_windows():
-            self.x64_radio_button.setEnabled(True)
-        self.x86_radio_button.setEnabled(True)
 
         self.refresh_builds_button.setEnabled(True)
         self.find_build_value.setEnabled(True)
@@ -2030,13 +2004,13 @@ class UpdateGroupBox(QGroupBox):
             # Test downloaded file
             status_bar.showMessage(_('Testing downloaded file archive'))
 
-            class TestingZipThread(QThread):
+            class TestingTarThread(QThread):
                 completed = pyqtSignal()
                 invalid = pyqtSignal()
                 not_downloaded = pyqtSignal()
 
                 def __init__(self, downloaded_file):
-                    super(TestingZipThread, self).__init__()
+                    super(TestingTarThread, self).__init__()
 
                     self.downloaded_file = downloaded_file
 
@@ -2045,15 +2019,14 @@ class UpdateGroupBox(QGroupBox):
 
                 def run(self):
                     try:
-                        with zipfile.ZipFile(self.downloaded_file) as z:
-                            if z.testzip() is not None:
-                                self.invalid.emit()
-                                return
-                    except zipfile.BadZipFile:
+                        if tarfile.is_tarfile(self.downloaded_file):
+                            print("Debug downloaded file: ", self.downloaded_file)
+                            self.completed.emit()
+                        else:
+                            self.invalid.emit()
+                    except FileNotFoundError:
                         self.not_downloaded.emit()
                         return
-
-                    self.completed.emit()
 
             def completed_test():
                 self.test_thread = None
@@ -2081,7 +2054,7 @@ class UpdateGroupBox(QGroupBox):
                 delete_path(download_dir)
                 self.finish_updating()
 
-            test_thread = TestingZipThread(self.downloaded_file)
+            test_thread = TestingTarThread(self.downloaded_file)
             test_thread.completed.connect(completed_test)
             test_thread.invalid.connect(invalid)
             test_thread.not_downloaded.connect(not_downloaded)
@@ -2231,10 +2204,10 @@ class UpdateGroupBox(QGroupBox):
     def extract_new_build(self):
         self.extracting_new_build = True
 
-        z = zipfile.ZipFile(self.downloaded_file)
-        self.extracting_zipfile = z
+        t = tarfile.TarFile.open(self.downloaded_file, "r:*")
+        self.extracting_tarfile = t
 
-        self.extracting_infolist = z.infolist()
+        self.extracting_infolist = t.getmembers()
         self.extracting_index = 0
 
         main_window = self.get_main_window()
@@ -2271,7 +2244,7 @@ class UpdateGroupBox(QGroupBox):
 
                 self.extracting_new_build = False
 
-                self.extracting_zipfile.close()
+                self.extracting_tarfile.close()
 
                 # Keep a copy of the archive if selected in the settings
                 if config_true(get_config_value('keep_archive_copy', 'False')):
@@ -2295,10 +2268,10 @@ class UpdateGroupBox(QGroupBox):
                 extracting_element = self.extracting_infolist[
                     self.extracting_index]
                 self.extracting_label.setText(_('Extracting {0}').format(
-                    extracting_element.filename))
+                    extracting_element.name))
 
                 try:
-                    self.extracting_zipfile.extract(extracting_element,
+                    self.extracting_tarfile.extract(extracting_element,
                         self.game_dir)
                 except OSError as e:
                     # Display the error and stop the update process
@@ -3121,12 +3094,7 @@ class UpdateGroupBox(QGroupBox):
     def refresh_builds(self):
         selected_branch = self.branch_button_group.checkedButton()
 
-        selected_platform = self.platform_button_group.checkedButton()
-
-        if selected_platform is self.x64_radio_button:
-            selected_platform = 'x64'
-        elif selected_platform is self.x86_radio_button:
-            selected_platform = 'x86'
+        selected_platform = 'x64'
 
         if selected_branch is self.stable_radio_button:
             # Populate stable builds and stable changelog
@@ -3282,17 +3250,6 @@ class UpdateGroupBox(QGroupBox):
 
         # Change available builds and changelog
         self.refresh_builds()
-
-    def platform_clicked(self, button):
-        if button is self.x64_radio_button:
-            config_value = 'x64'
-        elif button is self.x86_radio_button:
-            config_value = 'x86'
-
-        set_config_value('platform', config_value)
-
-        self.refresh_builds()
-
 
 class ChangelogParsingThread(QThread):
     completed = pyqtSignal(StringIO)

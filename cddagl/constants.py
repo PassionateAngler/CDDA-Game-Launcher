@@ -66,8 +66,7 @@ STABLE_ASSETS = {
         'released_on': '2020-05-20T12:21:59Z',
         'github_release': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/0.E-2/',
         'Tiles': {
-            'x64': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/download/0.E-2/cataclysmdda-0.E-Windows_x64-Tiles-0.E-2.zip',
-            'x86': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/download/0.E-2/cataclysmdda-0.E-Windows-Tiles-0.E-2.zip'
+            'x64': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/download/0.E-2/cataclysmdda-0.E-Linux_x64-Tiles-0.E-2.tar.gz'
         }
     },
     '0.E-1': {
@@ -76,8 +75,7 @@ STABLE_ASSETS = {
         'released_on': '2020-05-16T09:16:41Z',
         'github_release': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/0.E-1/',
         'Tiles': {
-            'x64': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/download/0.E-1/cataclysmdda-0.E-Windows_x64-Tiles-0.E-1.zip',
-            'x86': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/download/0.E-1/cataclysmdda-0.E-Windows-Tiles-0.E-1.zip'
+            'x64': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/download/0.E-1/cataclysmdda-0.E-Linux_x64-Tiles-0.E-1.tar.gz'
         }
     },
     '0.E': {
@@ -86,8 +84,7 @@ STABLE_ASSETS = {
         'released_on': '2020-04-01T12:48:28Z',
         'github_release': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/tag/0.E',
         'Tiles': {
-            'x64': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/download/0.E/cataclysmdda-0.E-Windows_x64-Tiles-10478.zip',
-            'x86': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/download/0.E/cataclysmdda-0.E-Windows-Tiles-10478.zip'
+            'x64': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/download/0.E/cataclysmdda-0.E-Linux_x64-Tiles-10478.tar.gz'
         }
     },
     '0.D': {
@@ -96,18 +93,7 @@ STABLE_ASSETS = {
         'released_on': '2019-03-08T04:22:54Z',
         'github_release': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/tag/0.D',
         'Tiles': {
-            'x64': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/download/0.D/cataclysmdda-0.D-8574-Win64-Tiles.zip',
-            'x86': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/download/0.D/cataclysmdda-0.D-8574-Win-Tiles.zip'
-        }
-    },
-    '0.C': {
-        'name': '0.C Cooper',
-        'number': '2834',
-        'released_on': '2015-03-09T16:21:48Z',
-        'github_release': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/tag/0.C',
-        'Tiles': {
-            'x64': 'https://dev.narc.ro/cataclysm/jenkins-promoted/Windows_x64/Tiles/cataclysmdda-0.C-2834.zip',
-            'x86': 'https://dev.narc.ro/cataclysm/jenkins-promoted/Windows_x64/Tiles/cataclysmdda-0.C-2834.zip'
+            'x64': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/download/0.D/cataclysmdda-0.D-8574-Linux-Tiles.tar.gz'
         }
     }
 }

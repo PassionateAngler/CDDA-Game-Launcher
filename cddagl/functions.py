@@ -82,57 +82,14 @@ def delete_path(path):
     depending on the settings used) using the built in Windows File
     operations dialog
     '''
-
-    # Make sure we have an absolute path first
-    if not os.path.isabs(path):
-        path = os.path.abspath(path)
-
-    shellcon = winutils.shellcon
-
-    permanently_delete_files = config_true(
-        get_config_value('permanently_delete_files', 'False'))
-
-    if permanently_delete_files:
-        flags = 0
-    else:
-        flags = shellcon.FOF_ALLOWUNDO
-
-    flags = (flags |
-        shellcon.FOF_SILENT |
-        shellcon.FOF_NOCONFIRMATION |
-        shellcon.FOF_WANTNUKEWARNING
-        )
-
-    try:
-        return winutils.delete(path, flags)
-    except com_error:
-        return False
+    print("DEBUG: delete file")
 
 def move_path(srcpath, dstpath):
     ''' Move srcpath to dstpath using using the built in Windows File
     operations dialog
     '''
-
-    # Make sure we have absolute paths first
-    if not os.path.isabs(srcpath):
-        srcpath = os.path.abspath(srcpath)
-    if not os.path.isabs(dstpath):
-        dstpath = os.path.abspath(dstpath)
-
-    shellcon = winutils.shellcon
-
-    flags = (
-        shellcon.FOF_ALLOWUNDO |
-        shellcon.FOF_SILENT |
-        shellcon.FOF_NOCONFIRMMKDIR |
-        shellcon.FOF_NOCONFIRMATION |
-        shellcon.FOF_WANTNUKEWARNING
-        )
-
-    try:
-        return winutils.move(srcpath, dstpath, flags)
-    except com_error:
-        return False
+    
+    print("DEBUG: move file")
 
 def safe_humanize(arrow_date, other=None, locale='en_us', only_distance=False, granularity='auto'):
     try:
