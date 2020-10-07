@@ -12,6 +12,7 @@ import tempfile
 import xml.etree.ElementTree
 import tarfile
 import random
+import shlex
 
 from collections import deque
 from datetime import datetime, timedelta, timezone
@@ -395,12 +396,11 @@ class GameDirGroupBox(QGroupBox):
         if params != '':
             params = ' ' + params
 
-        cmd = '"{exe_path}"{params}'.format(exe_path=self.exe_path,
+        cmd = '{exe_path} {params}'.format(exe_path=self.exe_path,
             params=params)
-
+        
         try:
-            game_process = subprocess.Popen(cmd, cwd=exe_dir,
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+            game_process = subprocess.Popen(shlex.split(cmd), cwd=exe_dir)
         except OSError as e:
             main_window = self.get_main_window()
             status_bar = main_window.statusBar()
