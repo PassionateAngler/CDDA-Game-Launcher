@@ -2260,8 +2260,13 @@ class UpdateGroupBox(QGroupBox):
 
                 main_tab = self.get_main_tab()
                 game_dir_group_box = main_tab.game_dir_group_box
-
+                
                 self.analysing_new_build = True
+                if self.extracting_infolist[0].isdir():
+                    game_directory = os.path.join(game_dir_group_box.dir_combo.currentText(), self.extracting_infolist[0].name)
+                    print("Debug :", game_directory)
+                    game_dir_group_box.set_dir_combo_value(game_directory)
+
                 game_dir_group_box.analyse_new_build(self.selected_build)
 
             else:
