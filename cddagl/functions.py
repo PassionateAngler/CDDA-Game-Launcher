@@ -82,14 +82,14 @@ def delete_path(path):
     depending on the settings used) using the built in Windows File
     operations dialog
     '''
-    print("DEBUG: delete file")
+    print("DEBUG: delete file: ", path)
 
 def move_path(srcpath, dstpath):
     ''' Move srcpath to dstpath using using the built in Windows File
     operations dialog
     '''
     
-    print("DEBUG: move file")
+    print("DEBUG: move file : ", srcpath, " to ", dstpath )
 
 def safe_humanize(arrow_date, other=None, locale='en_us', only_distance=False, granularity='auto'):
     try:

@@ -2977,7 +2977,7 @@ class UpdateGroupBox(QGroupBox):
         target_regex = re.compile(r'cataclysmdda-(?P<major>.+)-' +
             re.escape(asset_platform) + r'-' +
             re.escape(asset_graphics) + r'-' +
-            r'b?(?P<build>\d+)\.zip'
+            r'b?(?P<build>\d+)\.tar.gz'
             )
 
         build_regex = re.compile(r'build #(?P<build>\d+)')

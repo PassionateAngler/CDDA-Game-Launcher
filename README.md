@@ -3,14 +3,22 @@
 This is Linux port of CDDA Game Launcher by remyroy: 
 https://github.com/remyroy/CDDA-Game-Launcher 
 
-It is very early stage.
+It is very early stage under heavy development. No warranty given. Use at your own risk.
+Unexpected behaviour may happen like nuclear warfare or debug messages with polish swear words. 
+
+All required modules are in Pipfile.
+
+pipenv install
+pipenv run python3 -m cddagl
+
+Have fun :)
 
 A [Cataclysm: Dark Days Ahead](https://cataclysmdda.org/) launcher with additional features.
 
 ## Implemented features
 
 * Launching the game
-* Game installation (only stable release now)
+* Game installation 
 
 ## License
 

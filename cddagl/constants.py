@@ -39,11 +39,7 @@ TEMP_PREFIX = 'cddagl'
 BASE_ASSETS = {
     'Tiles': {
         'x64': {
-            'Platform': 'Windows_x64',
-            'Graphics': 'Tiles'
-        },
-        'x86': {
-            'Platform': 'Windows',
+            'Platform': 'Linux_x64',
             'Graphics': 'Tiles'
         }
     },
@@ -52,10 +48,7 @@ BASE_ASSETS = {
             'Platform': 'Windows_x64',
             'Graphics': 'Curses'
         },
-        'x86': {
-            'Platform': 'Windows',
-            'Graphics': 'Curses'
-        },
+
     }
 }
 
