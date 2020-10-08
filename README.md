@@ -8,8 +8,10 @@ Unexpected behaviour may happen like nuclear warfare or debug messages with poli
 
 All required modules are in Pipfile.
 
+```
 pipenv install
 pipenv run python3 -m cddagl
+```
 
 Have fun :)
 
