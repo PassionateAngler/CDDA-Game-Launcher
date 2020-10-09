@@ -13,6 +13,7 @@ import xml.etree.ElementTree
 import tarfile
 import random
 import shlex
+import pathlib
 
 from collections import deque
 from datetime import datetime, timedelta, timezone
@@ -2262,40 +2263,39 @@ class UpdateGroupBox(QGroupBox):
                 game_dir_group_box = main_tab.game_dir_group_box
                 
                 self.analysing_new_build = True
-                if self.extracting_infolist[0].isdir():
-                    game_directory = os.path.join(game_dir_group_box.dir_combo.currentText(), self.extracting_infolist[0].name)
-                    print("Debug :", game_directory)
-                    game_dir_group_box.set_dir_combo_value(game_directory)
-
                 game_dir_group_box.analyse_new_build(self.selected_build)
 
             else:
                 extracting_element = self.extracting_infolist[
                     self.extracting_index]
-                self.extracting_label.setText(_('Extracting {0}').format(
-                    extracting_element.name))
+                p = pathlib.Path(extracting_element.name)
+                name_with_directory = extracting_element.name
+                extracting_element.name = str(pathlib.Path(*p.parts[1:]))
 
-                try:
-                    self.extracting_tarfile.extract(extracting_element,
-                        self.game_dir)
-                except OSError as e:
-                    # Display the error and stop the update process
-                    error_msgbox = QMessageBox()
-                    error_msgbox.setWindowTitle(
-                        _('Cannot extract game archive'))
+                if extracting_element.isreg() and extracting_element.name != ".":
+                    self.extracting_label.setText(_('Extracting {0}').format(
+                        name_with_directory))
+                    try:
+                        self.extracting_tarfile.extract(extracting_element,
+                            self.game_dir)
+                    except OSError as e:
+                        # Display the error and stop the update process
+                        error_msgbox = QMessageBox()
+                        error_msgbox.setWindowTitle(
+                            _('Cannot extract game archive'))
 
-                    text = _('''
+                        text = _('''
 <p>The launcher failed to extract the game archive.</p>
 <p>It received the following error from the operating system: {error}</p>'''
                         ).format(error=html.escape(e.strerror))
 
-                    error_msgbox.setText(text)
-                    error_msgbox.addButton(_('OK'), QMessageBox.YesRole)
-                    error_msgbox.setIcon(QMessageBox.Critical)
+                        error_msgbox.setText(text)
+                        error_msgbox.addButton(_('OK'), QMessageBox.YesRole)
+                        error_msgbox.setIcon(QMessageBox.Critical)
 
-                    error_msgbox.exec()
+                        error_msgbox.exec()
 
-                    self.update_game()
+                        self.update_game()
 
                 self.extracting_index += 1
 

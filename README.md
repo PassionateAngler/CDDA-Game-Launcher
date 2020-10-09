@@ -3,11 +3,11 @@
 This is Linux port of CDDA Game Launcher by remyroy: 
 https://github.com/remyroy/CDDA-Game-Launcher 
 
-It is very early stage under heavy development. 
+It is in very early, stage under heavy development. 
 
 No warranty given. Use at your own risk.
 
-Unexpected behaviour may happen like nuclear warfare or debug messages with polish swear words. 
+Unexpected behaviour may happen. 
 
 All required modules are in Pipfile.
 
