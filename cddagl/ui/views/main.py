@@ -38,7 +38,7 @@ import cddagl.constants as cons
 from cddagl.constants import get_cddagl_path, get_cdda_uld_path
 from cddagl import __version__ as version
 from cddagl.functions import (
-    tryint, move_path, is_64_windows, sizeof_fmt, delete_path,
+    tryint, move_path, sizeof_fmt, delete_path,
     unique, log_exception, ensure_slash, safe_humanize
 )
 from cddagl.i18n import proxy_ngettext as ngettext, proxy_gettext as _
@@ -1222,23 +1222,6 @@ class UpdateGroupBox(QGroupBox):
         platform_button_group = QButtonGroup()
         self.platform_button_group = platform_button_group
 
-        # x64_radio_button = QRadioButton()
-        # layout.addWidget(x64_radio_button, layout_row, 1)
-        # self.x64_radio_button = x64_radio_button
-        # platform_button_group.addButton(x64_radio_button)
-
-        # platform_button_group.buttonClicked.connect(self.platform_clicked)
-
-        # if not is_64_windows():
-        #     x64_radio_button.setEnabled(False)
-
-        # x86_radio_button = QRadioButton()
-        # layout.addWidget(x86_radio_button, layout_row, 2)
-        # self.x86_radio_button = x86_radio_button
-        # platform_button_group.addButton(x86_radio_button)
-
-        # layout_row = layout_row + 1
-
         available_builds_label = QLabel()
         layout.addWidget(available_builds_label, layout_row, 0, Qt.AlignRight)
         self.available_builds_label = available_builds_label
@@ -1342,6 +1325,7 @@ class UpdateGroupBox(QGroupBox):
             elif branch == cons.CONFIG_BRANCH_EXPERIMENTAL:
                 self.experimental_radio_button.setChecked(True)
 
+            self.show_hide_find_build()
             self.refresh_builds()
 
         self.shown = True

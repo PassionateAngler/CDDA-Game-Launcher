@@ -23,7 +23,7 @@ A [Cataclysm: Dark Days Ahead](https://cataclysmdda.org/) launcher with addition
 ## Implemented features
 
 * Launching the game
-* Game installation 
+* Game installation, game update, switching versions
 
 ## License
 

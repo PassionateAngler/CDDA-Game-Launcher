@@ -3,9 +3,10 @@ import os
 import re
 import traceback
 from io import StringIO
-
-#import winutils
-#from pywintypes import com_error
+from send2trash import send2trash, TrashPermissionError
+import pathlib
+import os
+import shutil
 
 import cddagl
 from cddagl.i18n import proxy_gettext as _
@@ -58,14 +59,9 @@ def arstrip(value):
         value = value[:-1]
     return value
 
-def is_64_windows():
-    return 'PROGRAMFILES(X86)' in os.environ
-
 def bitness():
-    if is_64_windows():
-        return _('64-bit')
-    else:
-        return _('32-bit')
+    return _('64-bit')
+
 
 def sizeof_fmt(num, suffix=None):
     if suffix is None:
@@ -79,16 +75,32 @@ def sizeof_fmt(num, suffix=None):
 
 def delete_path(path):
     ''' Move directory or file in the recycle bin (or permanently delete it
-    depending on the settings used) using the built in Windows File
-    operations dialog
+    depending on the settings used)
     '''
-    print("DEBUG: delete file: ", path)
-
+    print("DEBUG delete:", path)
+    try:
+        send2trash(path)
+        return True
+    except TrashPermissionError:
+        #check if directory is in /tmp if yes remove it
+        p = pathlib.Path(path)
+        if p.parts[1] == "tmp":
+            os.remove(path)
+            return True
+    
+    return False
+            
 def move_path(srcpath, dstpath):
     ''' Move srcpath to dstpath using using the built in Windows File
     operations dialog
     '''
-    
+    try:
+        shutil.move(srcpath, dstpath)
+        return True
+    except OSError as e:
+        print("ERROR: Can not move ", srcpath, " to ", dstpath)
+        return False
+
     print("DEBUG: move file : ", srcpath, " to ", dstpath )
 
 def safe_humanize(arrow_date, other=None, locale='en_us', only_distance=False, granularity='auto'):
