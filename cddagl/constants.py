@@ -19,15 +19,14 @@ CDDAGL_LATEST_RELEASE = '/repos/remyroy/CDDA-Game-Launcher/releases/latest'
 
 NEW_ISSUE_URL = 'https://github.com/remyroy/CDDA-Game-Launcher/issues/new'
 
-CHANGELOG_URL = 'http://gorgon.narc.ro:8080/job/Cataclysm-Matrix/api/xml?tree=builds[number,timestamp,building,result,changeSet[items[msg]],runs[result,fullDisplayName]]&xpath=//build&wrapper=builds'
 CDDA_ISSUE_URL_ROOT = 'https://github.com/CleverRaven/Cataclysm-DDA/issues/'
+CDDA_COMMIT_URL_ROOT = 'https://github.com/CleverRaven/Cataclysm-DDA/commit/'
 CDDAGL_ISSUE_URL_ROOT = 'https://github.com/remyroy/CDDA-Game-Launcher/issues/'
 
 GAME_ISSUE_URL = 'https://cataclysmdda.org/#ive-found-a-bug--i-would-like-to-make-a-suggestion-what-should-i-do'
 
-BUILD_CHANGES_URL = lambda bn: f'http://gorgon.narc.ro:8080/job/Cataclysm-Matrix/{bn}/changes'
-
 BUILD_TAG = lambda bn: f'cdda-jenkins-b{bn}'
+NEW_BUILD_TAG = lambda bn: f'experimental-{bn}'
 
 WORLD_FILES = set(('worldoptions.json', 'worldoptions.txt', 'master.gsav'))
 
@@ -59,7 +58,40 @@ BASE_ASSETS = {
     }
 }
 
+NEW_BASE_ASSETS = {
+    'Tiles': {
+        'x64': {
+            'Platform': 'x64',
+            'Graphics': 'tiles'
+        },
+        'x86': {
+            'Platform': 'x32',
+            'Graphics': 'tiles'
+        }
+    }
+}
+
 STABLE_ASSETS = {
+    '0.F': {
+        'name': '0.F Frank',
+        'number': '2021-07-03-0512',
+        'released_on': '2021-07-03T05:12:43Z',
+        'github_release': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/0.F/',
+        'Tiles': {
+            'x64': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/download/0.F/cdda-windows-tiles-x64-2021-07-03-0512.zip',
+            'x86': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/download/0.F/cdda-windows-tiles-x32-2021-07-03-0512.zip'
+        }
+    },
+    '0.E-3': {
+        'name': '0.E-3 Ellison-3',
+        'number': '10478',
+        'released_on': '2020-12-09T22:52:49Z',
+        'github_release': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/0.E-3/',
+        'Tiles': {
+            'x64': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/download/0.E-3/cataclysmdda-0.E-Windows_x64-Tiles-0.E-3.zip',
+            'x86': 'https://github.com/CleverRaven/Cataclysm-DDA/releases/download/0.E-3/cataclysmdda-0.E-Windows-Tiles-0.E-3.zip'
+        }
+    },
     '0.E-2': {
         'name': '0.E-2 Ellison-2',
         'number': '10478',
@@ -113,12 +145,53 @@ STABLE_ASSETS = {
 }
 
 STABLE_CHANGELOG = '''
+<h3>0.F Frank</h3>
+
+<p>After a long and anticlimactic buildup, we are pleased to announce the release of stable version 0.F “Frank” of Cataclysm: Dark Days Ahead! Like our previous stable versions, this release features an expansive range of bugfixes, code and content additions, and new features. 4,500 new game entities were added, 123,162 lines of source code were inserted, and 77,727 lines were deleted.</p>
+
+<p>The goal was to have a smaller and more manageable release this cycle, which was an utter failure, as it took well over a year and by several measures was even larger than the 0.E cycle.</p>
+
+<p>We’d overall characterize 0.F as a release with a lot of content and polish. Compared to 0.E, you may find it a little more difficult (the pendulum swings ever back and forth), but we think also more rewarding. The most obvious feature of 0.F is the addition of nested inventory, the ability to store items in containers and have them behave as you’d expect. This is probably the most long awaited and highly requested feature of the past five years of development. Besides pockets, 0.F features the addition of achievements for fun and bragging rights, a proficiency system to represent more refined skill knowledge, blood loss mechanics for you and your enemies, weariness that builds as you push yourself to your limits, vehicles that can drive up and down z-levels (and bridges that are above rivers, enabling more navigable rivers, as a result), and a vast host of new content from new monsters and evolutions to new quests and items. On the mod side, Magiclysm, Aftershock, and Dinomod have all grown expansively, including new artifact and enchantment systems that have impacted content in the main game. And much more, too much to list here.</p>
+
+<p>Players coming from the last stable will notice a switch towards encouraging looting over crafting, especially in the early game, and will have to be cautious about overextending themselves in the beginning of their survival effort. As usual, you’ll want to avoid getting into combat with multiple zombies in an open area. However, you can also have ‘grab bags’ of useful gear and tools, allowing you to toss your loot sack to the floor to engage in an unencumbered melee battle with zombies! All in all, as usual, we’re deeply excited about this new version, and look forward to continuing to make your survival difficult in the months to come.</p>
+
+<p>Highlights</p>
+<ul>
+  <li>Nested Containers rationalize inventory management and enable dropping and retrieving go-bags during fights.</li>
+  <li>Achievements track your deeds and misdeeds across games.</li>
+  <li>Proficiencies better represent deeper knowledge required for various endeavors, mostly crafting.</li>
+  <li>Bleeding added to both the player and monsters as the first step toward a more comprehensive wound and wound treatment system.</li>
+  <li>Weariness tracking added to represent longer-term physical exhaustion.</li>
+  <li>Elevated bridges over navigable rivers added, allowing better navigability while using boats.</li>
+  <li>Large-scale audit of weapon and armor values for better representativeness and consistency.</li>
+  <li>Improved armor handling by separating ballistic damage into its own damage type.</li>
+  <li>Pervasive performance enhancements throughout the game.</li>
+  <li>Tileset vehicle support for more cohesive vehicle rendering.</li>
+  <li>Aftershock changes direction to a total conversion mod with a new far-future setting on a frozen world.</li>
+  <li>Dinomod added 238 dinosaurs, pterosaurs, mosasaurs, and dino-related NPCs with missions and dino locations.</li>
+  <li>Added many dino features, including zombie, fungal, evolved, bionic, baby, and mutant dino variants.</li>
+  <li>Dinomod added many dino interactions, including farming, riding, butchering, cooking, and special attacks.</li>
+  <li>Magiclysm added a huge content update including many new traits called Attunements that switch up gameplay at the endgame.</li>
+</ul>
+
+<p>For a larger, but still incomplete listing of features, see <a href="https://github.com/CleverRaven/Cataclysm-DDA/blob/0.F/data/changelog.txt">https://github.com/CleverRaven/Cataclysm-DDA/blob/0.F/data/changelog.txt</a></p>
+
+<h3>0.E-3 Ellison-3</h3>
+<p>Point release Ellison-3 includes following important bugfixes to original Ellison release:</p>
+<ul>
+  <li>fixed compilation under clang;
+  <li>fixes for several errors and crashes;
+  <li>fixed hardware keyboard issue in Android builds.
+</ul>
+<p>See differences between current point release and original release here - <a href="https://github.com/CleverRaven/Cataclysm-DDA/compare/0.E…0.E-3">0.E…0.E-3</a></p>
+
 <h3>0.E-2 Ellison-2</h3>
 <p>Point release Ellison-2 includes following important bugfixes to original Ellison release:</p>
 <ul>
   <li>fixed virtual keyboard issue in Android builds.</li>
 </ul>
 <p>See differences between current point release and original release here - <a href="https://github.com/CleverRaven/Cataclysm-DDA/compare/0.E...0.E-2">0.E…0.E-2</a></p>
+
 <h3>0.E-1 Ellison-1</h3>
 <p>Point release Ellison-1 includes a number of following important bugfixes to original Ellison release:</p>
 <ul>
@@ -127,6 +200,7 @@ STABLE_CHANGELOG = '''
   <li>enhanced Android builds.</li>
 </ul>
 <p>See differences between current point release and original release here - <a href="https://github.com/CleverRaven/Cataclysm-DDA/compare/0.E…0.E-1">0.E…0.E-1</a></p>
+
 <h3>0.E Ellison</h3>
 <p>The Ellison release adds a huge number of features and content that make the world feel more alive. From being able to climb onto building rooftops or hide behind cars, to building a camp for your followers in the wilderness, to exploring the new river and lake systems on a boat or raft, everything is more immersive and consistent. Also more STUFF. I didn’t think we would ever double the number of game entities with a release again, but we did.</p>
 <p>We aimed at a 6 month release cycle, and ended up spending 9 months adding features at a breakneck pace and 3 months putting the brakes on and stabilizing. I can’t honestly say that’s a huge disappointment, though toward the end the rest of the development team was really chomping at the bit to get back to feature work, so we’ll need to continue to adjust.</p>
@@ -193,7 +267,11 @@ STABLE_SHA256 = {
     'fb7db2b3cf101e19565ce515c012a089a75f54da541cd458144dc8483b5e59c8': '0.E-1',
     '1068867549c1a24ae241a886907651508830ccd9c091bad27bacbefabab99acc': '0.E-1',
     '0ce61cdfc299661382e30da133f7356b4faea38865ec0947139a08f40b595728': '0.E-2',
-    'c9ca51bd1e7549b0820fe736c10b3e73d358700c3460a0227fade59e9754e03d': '0.E-2'
+    'c9ca51bd1e7549b0820fe736c10b3e73d358700c3460a0227fade59e9754e03d': '0.E-2',
+    '563bd13cff18c4271c43c18568237046d1fd18ae200f7e5cdd969b80e6992967': '0.E-3',
+    'e4874bbb8e0a7b1e52b4dedb99575e2a90bfe84e74c36db58510f9973400077d': '0.E-3',
+    '1f5beb8b3dcb5ca1f704b816864771e2dd8ff38ca435a4abdb9a59e4bb95d099': '0.F',
+    '2794df225787174c6f5d8557d63f434a46a82f562c0395294901fb5d5d10d564': '0.F'
 }
 
 CONFIG_BRANCH_KEY = 'branch'

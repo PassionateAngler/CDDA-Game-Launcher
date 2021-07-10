@@ -1,5 +1,7 @@
 # Building guide
 
+> This guide is **outdated**. A updated version should soon be added to replace this one.
+
 CDDA Game Launcher is developed using Python. In order to run or build the launcher, you will need to download a recent version of Python and install all the requirements.
 
 ## Requirements

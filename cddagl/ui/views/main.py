@@ -9,26 +9,27 @@ import stat
 import subprocess
 import sys
 import tempfile
-import xml.etree.ElementTree
 import zipfile
 import random
 
 from collections import deque
-from datetime import datetime, timedelta, timezone
-from io import BytesIO, StringIO, TextIOWrapper
+from datetime import datetime, timedelta
+from io import BytesIO, TextIOWrapper
 from os import scandir
 from pathlib import Path
 from urllib.parse import urljoin
 
 import arrow
-from PyQt5.QtCore import Qt, QTimer, QUrl, QFileInfo, pyqtSignal, QStringListModel, QThread
+from PyQt5.QtCore import (
+    Qt, QTimer, QUrl, QFileInfo, pyqtSignal, QStringListModel, QThread, QRegularExpression
+)
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QGridLayout, QGroupBox, QVBoxLayout, QLabel, QLineEdit,
     QPushButton, QFileDialog, QToolButton, QProgressBar, QButtonGroup, QRadioButton,
     QComboBox, QTextBrowser, QMessageBox, QStyle, QHBoxLayout, QSizePolicy
 )
-from PyQt5.QtGui import QIntValidator
+from PyQt5.QtGui import QRegularExpressionValidator
 from babel.dates import format_datetime
 from pywintypes import error as PyWinError
 
@@ -45,7 +46,8 @@ from cddagl.sql.functions import (
     new_build, config_true
 )
 from cddagl.win32 import (
-    find_process_with_file_handle, activate_window, process_id_from_path, wait_for_pid
+    find_process_with_file_handle, activate_window, process_id_from_path, wait_for_pid,
+    get_documents_directory
 )
 
 logger = logging.getLogger('cddagl')
@@ -241,9 +243,8 @@ class GameDirGroupBox(QGroupBox):
 
             game_directory = get_config_value('game_directory')
             if game_directory is None:
-                cddagl_path = os.path.dirname(os.path.realpath(
-                    sys.executable))
-                default_dir = os.path.join(cddagl_path, 'cdda')
+                documents_path = get_documents_directory()
+                default_dir = os.path.join(documents_path, 'cdda')
                 game_directory = default_dir
 
             self.set_dir_combo_value(game_directory)
@@ -308,11 +309,10 @@ class GameDirGroupBox(QGroupBox):
                         excluded_entries.add('save')
 
                     # Prevent moving the launcher if it's in the game directory
-                    if getattr(sys, 'frozen', False):
-                        launcher_exe = os.path.abspath(sys.executable)
-                        launcher_dir = os.path.dirname(launcher_exe)
-                        if os.path.abspath(game_dir) == launcher_dir:
-                            excluded_entries.add(os.path.basename(launcher_exe))
+                    launcher_exe = os.path.abspath(sys.executable)
+                    launcher_dir = os.path.dirname(launcher_exe)
+                    if os.path.abspath(game_dir) == launcher_dir:
+                        excluded_entries.add(os.path.basename(launcher_exe))
 
                     for entry in os.listdir(game_dir):
                         if entry not in excluded_entries:
@@ -722,8 +722,21 @@ antivirus whitelist or select the action to trust this binary when detected.</p>
         self.exe_total_read = 0
 
         self.exe_sha256 = hashlib.sha256()
-        self.last_bytes = None
         self.game_version = ''
+
+        game_dir = self.dir_combo.currentText()
+        version_file = os.path.join(game_dir, 'VERSION.txt')
+        if os.path.isfile(version_file):
+            file_content = None
+            with open(version_file, 'r', encoding='utf8') as read_file:
+                file_content = read_file.read(1024)
+            if file_content is not None:
+                match = re.search(r'commit sha: (?P<commitsha>\S+)', file_content)
+                if match:
+                    commit_sha = match.group('commitsha')
+                    if len(commit_sha) >= 7:
+                        self.game_version = commit_sha[:7]
+        
         self.opened_exe = open(self.exe_path, 'rb')
 
         def timeout():
@@ -803,22 +816,9 @@ antivirus whitelist or select the action to trust this binary when detected.</p>
                     self.current_build = None
 
             else:
-                last_frame = bytes
-                if self.last_bytes is not None:
-                    last_frame = self.last_bytes + last_frame
-
-                match = re.search(
-                    b'(?P<version>[01]\\.[A-F](-\\d+-g[0-9a-f]+)?)\\x00',
-                    last_frame)
-                if match is not None:
-                    game_version = match.group('version').decode('ascii')
-                    if len(game_version) > len(self.game_version):
-                        self.game_version = game_version
-
                 self.exe_total_read += len(bytes)
                 self.reading_progress_bar.setValue(self.exe_total_read)
                 self.exe_sha256.update(bytes)
-                self.last_bytes = bytes
 
         timer.timeout.connect(timeout)
         timer.start(0)
@@ -1094,8 +1094,20 @@ antivirus whitelist or select the action to trust this binary when detected.</p>
             self.exe_total_read = 0
 
             self.exe_sha256 = hashlib.sha256()
-            self.last_bytes = None
             self.game_version = ''
+
+            version_file = os.path.join(game_dir, 'VERSION.txt')
+            if os.path.isfile(version_file):
+                file_content = None
+                with open(version_file, 'r', encoding='utf8') as read_file:
+                    file_content = read_file.read(1024)
+                if file_content is not None:
+                    match = re.search(r'commit sha: (?P<commitsha>\S+)', file_content)
+                    if match:
+                        commit_sha = match.group('commitsha')
+                        if len(commit_sha) >= 7:
+                            self.game_version = commit_sha[:7]
+
             self.opened_exe = open(self.exe_path, 'rb')
 
             def timeout():
@@ -1143,22 +1155,9 @@ antivirus whitelist or select the action to trust this binary when detected.</p>
                     update_group_box.post_extraction()
 
                 else:
-                    last_frame = bytes
-                    if self.last_bytes is not None:
-                        last_frame = self.last_bytes + last_frame
-
-                    match = re.search(
-                        b'(?P<version>[01]\\.[A-F](-\\d+-g[0-9a-f]+)?)\\x00',
-                        last_frame)
-                    if match is not None:
-                        game_version = match.group('version').decode('ascii')
-                        if len(game_version) > len(self.game_version):
-                            self.game_version = game_version
-
                     self.exe_total_read += len(bytes)
                     self.reading_progress_bar.setValue(self.exe_total_read)
                     self.exe_sha256.update(bytes)
-                    self.last_bytes = bytes
 
             timer.timeout.connect(timeout)
             timer.start(0)
@@ -1181,8 +1180,7 @@ class UpdateGroupBox(QGroupBox):
         self.api_reply = None
         self.api_response_content = None
 
-        self.changelog_http_reply = None
-        self.changelog_http_data = None
+        self.find_build_count = 0
 
         layout = QGridLayout()
 
@@ -1263,7 +1261,8 @@ class UpdateGroupBox(QGroupBox):
         self.find_build_label = find_build_label
 
         find_build_value = QLineEdit()
-        find_build_value.setValidator(QIntValidator())
+        find_build_value.setValidator(QRegularExpressionValidator(
+            QRegularExpression(r'\d+(-\d+)*')))
         find_build_value.returnPressed.connect(self.find_build)
         layout.addWidget(find_build_value, layout_row, 1, 1, 2)
         self.find_build_value = find_build_value
@@ -1365,10 +1364,18 @@ class UpdateGroupBox(QGroupBox):
         build_number = self.find_build_value.text()
         build_number = build_number.strip()
 
+        build_number = re.sub(r'[^0-9\-]', '', build_number)
+
         if build_number == '':
             return
 
-        url = cons.GITHUB_REST_API_URL + cons.CDDA_RELEASE_BY_TAG(cons.BUILD_TAG(build_number))
+        if self.find_build_count == 0:
+            url = cons.GITHUB_REST_API_URL + cons.CDDA_RELEASE_BY_TAG(cons.BUILD_TAG(build_number))
+            self.find_build_count = 1
+        elif self.find_build_count == 1:
+            url = cons.GITHUB_REST_API_URL + cons.CDDA_RELEASE_BY_TAG(
+                cons.NEW_BUILD_TAG(build_number))
+            self.find_build_count = 0
 
         self.api_response_content = BytesIO()
 
@@ -1426,9 +1433,13 @@ class UpdateGroupBox(QGroupBox):
             build_number = self.find_build_value.text()
             build_number = build_number.strip()
 
-            status_bar.showMessage(_('Build #{build} not found on GitHub'
-                ).format(build=build_number))
-            return
+            if self.find_build_count == 0:
+                status_bar.showMessage(_('Build #{build} not found on GitHub'
+                    ).format(build=build_number))
+                return
+            elif self.find_build_count == 1:
+                self.find_build()
+                return
 
         self.api_response_content.seek(0)
         try:
@@ -1451,8 +1462,18 @@ class UpdateGroupBox(QGroupBox):
             re.escape(asset_graphics) + r'-' +
             r'b?(?P<build>\d+)\.zip'
             )
+        
+        new_asset_platform = self.new_base_asset['Platform']
+        new_asset_graphics = self.new_base_asset['Graphics']
 
-        build_regex = re.compile(r'build #(?P<build>\d+)')
+        new_target_regex = re.compile(
+            r'cdda-windows-' +
+            re.escape(new_asset_graphics) + r'-' +
+            re.escape(new_asset_platform) + r'-' +
+            r'b?(?P<build>[0-9\-]+)\.zip'
+            )
+
+        build_regex = re.compile(r'[Bb]uild #?(?P<build>[0-9\-]+)')
 
         if any(x not in release for x in ('name', 'created_at')):
             return
@@ -1466,7 +1487,9 @@ class UpdateGroupBox(QGroupBox):
                     x for x in release['assets']
                     if 'browser_download_url' in x
                         and 'name' in x
-                        and target_regex.search(x['name']) is not None
+                        and (
+                            target_regex.search(x['name']) is not None or
+                            new_target_regex.search(x['name']) is not None )
                 )
                 asset = next(asset_iter, None)
 
@@ -1496,7 +1519,7 @@ class UpdateGroupBox(QGroupBox):
             return
 
         if len(builds) > 0:
-            builds.sort(key=lambda x: (int(x['number']), x['date']), reverse=True)
+            builds.sort(key=lambda x: (x['date'], x['number']), reverse=True)
             self.builds = builds
 
             self.builds_combo.clear()
@@ -1528,7 +1551,9 @@ class UpdateGroupBox(QGroupBox):
                 if (combo_model.item(x).data(Qt.UserRole)['number'] == build_number and
                     combo_model.item(x).isEnabled()):
                     self.builds_combo.setCurrentIndex(x)
-
+            self.find_build_count = 0
+        elif self.find_build_count == 1:
+            self.find_build()
 
     def find_build_ready_read(self):
         self.api_response_content.write(self.api_reply.readAll())
@@ -1829,11 +1854,10 @@ class UpdateGroupBox(QGroupBox):
         if config_true(get_config_value('prevent_save_move', 'False')):
             excluded_entries.add('save')
         # Prevent moving the launcher if it's in the game directory
-        if getattr(sys, 'frozen', False):
-            launcher_exe = os.path.abspath(sys.executable)
-            launcher_dir = os.path.dirname(launcher_exe)
-            if os.path.abspath(game_dir) == launcher_dir:
-                excluded_entries.add(os.path.basename(launcher_exe))
+        launcher_exe = os.path.abspath(sys.executable)
+        launcher_dir = os.path.dirname(launcher_exe)
+        if os.path.abspath(game_dir) == launcher_dir:
+            excluded_entries.add(os.path.basename(launcher_exe))
         for entry in dir_list:
             if entry not in excluded_entries:
                 entry_path = os.path.join(game_dir, entry)
@@ -2136,13 +2160,12 @@ class UpdateGroupBox(QGroupBox):
             and 'save' in dir_list):
             dir_list.remove('save')
 
-        if getattr(sys, 'frozen', False):
-            launcher_exe = os.path.abspath(sys.executable)
-            launcher_dir = os.path.dirname(launcher_exe)
-            if os.path.abspath(game_dir) == launcher_dir:
-                launcher_name = os.path.basename(launcher_exe)
-                if launcher_name in dir_list:
-                    dir_list.remove(launcher_name)
+        launcher_exe = os.path.abspath(sys.executable)
+        launcher_dir = os.path.dirname(launcher_exe)
+        if os.path.abspath(game_dir) == launcher_dir:
+            launcher_name = os.path.basename(launcher_exe)
+            if launcher_name in dir_list:
+                dir_list.remove(launcher_name)
 
         if len(dir_list) > 0:
             status_bar.showMessage(_('Backing up current game'))
@@ -2816,7 +2839,7 @@ class UpdateGroupBox(QGroupBox):
             self.download_last_bytes_read = bytes_read
             self.download_last_read = datetime.utcnow()
 
-    def start_lb_request(self, base_asset):
+    def start_lb_request(self, base_asset, new_base_asset):
         self.disable_controls(True)
         self.refresh_warning_label.hide()
         self.find_build_warning_label.hide()
@@ -2833,6 +2856,7 @@ class UpdateGroupBox(QGroupBox):
 
         url = cons.GITHUB_REST_API_URL + cons.CDDA_RELEASES
         self.base_asset = base_asset
+        self.new_base_asset = new_base_asset
 
         fetching_label = QLabel()
         fetching_label.setText(_('Fetching: {url}').format(url=url))
@@ -2998,8 +3022,18 @@ class UpdateGroupBox(QGroupBox):
             re.escape(asset_graphics) + r'-' +
             r'b?(?P<build>\d+)\.zip'
             )
+        
+        new_asset_platform = self.new_base_asset['Platform']
+        new_asset_graphics = self.new_base_asset['Graphics']
 
-        build_regex = re.compile(r'build #(?P<build>\d+)')
+        new_target_regex = re.compile(
+            r'cdda-windows-' +
+            re.escape(new_asset_graphics) + r'-' +
+            re.escape(new_asset_platform) + r'-' +
+            r'b?(?P<build>[0-9\-]+)\.zip'
+            )
+
+        build_regex = re.compile(r'[Bb]uild #?(?P<build>[0-9\-]+)')
 
         for release in releases:
             if any(x not in release for x in ('name', 'created_at')):
@@ -3013,7 +3047,9 @@ class UpdateGroupBox(QGroupBox):
                         x for x in release['assets']
                         if 'browser_download_url' in x
                            and 'name' in x
-                           and target_regex.search(x['name']) is not None
+                           and (
+                               target_regex.search(x['name']) is not None or
+                               new_target_regex.search(x['name']) is not None)
                     )
                     asset = next(asset_iter, None)
 
@@ -3027,7 +3063,7 @@ class UpdateGroupBox(QGroupBox):
                 builds.append(build)
 
         if len(builds) > 0:
-            builds.sort(key=lambda x: (int(x['number']), x['date']), reverse=True)
+            builds.sort(key=lambda x: (x['date'], x['number']), reverse=True)
             self.builds = builds
 
             self.builds_combo.clear()
@@ -3143,7 +3179,7 @@ class UpdateGroupBox(QGroupBox):
                 }
                 builds.append(build)
             
-            builds.sort(key=lambda x: (int(x['number']), x['date']), reverse=True)
+            builds.sort(key=lambda x: (x['date'], x['number']), reverse=True)
             self.builds = builds
 
             self.builds_combo.clear()
@@ -3180,87 +3216,13 @@ class UpdateGroupBox(QGroupBox):
             
         elif selected_branch is self.experimental_radio_button:
             release_asset = cons.BASE_ASSETS['Tiles'][selected_platform]
+            release_new_asset = cons.NEW_BASE_ASSETS['Tiles'][selected_platform]
 
-            self.start_lb_request(release_asset)
+            self.start_lb_request(release_asset, release_new_asset)
             self.refresh_changelog()
 
     def refresh_changelog(self):
-        if self.changelog_http_reply is not None:
-            self.changelog_http_data = None
-            self.changelog_http_reply.abort()
-            self.changelog_http_reply = None
-
-        main_window = self.get_main_window()
-
-        status_bar = main_window.statusBar()
-        status_bar.clearMessage()
-        self.changelog_content.setHtml(_('<h3>Loading changelog...</h3>'))
-
-        status_bar.busy += 1
-
-        changelog_label = QLabel()
-        changelog_label.setText(_('Fetching latest build changelogs'))
-        status_bar.addWidget(changelog_label, 100)
-        self.changelog_label = changelog_label
-
-        progress_bar = QProgressBar()
-        status_bar.addWidget(progress_bar)
-        self.changelog_progress_bar = progress_bar
-
-        progress_bar.setMinimum(0)
-
-        self.changelog_http_data = BytesIO()
-
-        request = QNetworkRequest(QUrl(cons.CHANGELOG_URL))
-        request.setRawHeader(b'User-Agent',
-            b'CDDA-Game-Launcher/' + version.encode('utf8'))
-
-        self.changelog_http_reply = self.qnam.get(request)
-        self.changelog_http_reply.finished.connect(self.changelog_http_finished)
-        self.changelog_http_reply.readyRead.connect(
-            self.changelog_http_ready_read)
-        self.changelog_http_reply.downloadProgress.connect(
-            self.changelog_dl_progress)
-
-    def changelog_http_finished(self):
-        main_window = self.get_main_window()
-
-        status_bar = main_window.statusBar()
-        status_bar.removeWidget(self.changelog_label)
-        status_bar.removeWidget(self.changelog_progress_bar)
-
-        main_tab = self.get_main_tab()
-        game_dir_group_box = main_tab.game_dir_group_box
-
-        status_bar.busy -= 1
-
-        if not game_dir_group_box.game_started:
-            if status_bar.busy == 0:
-                status_bar.showMessage(_('Ready'))
-        else:
-            if status_bar.busy == 0:
-                status_bar.showMessage(_('Game process is running'))
-
-        if self.changelog_http_data is not None:
-            self.changelog_content.setHtml(_('<h3>Parsing changelog...</h3>'))
-
-            # Use thread to avoid blocking UI during parsing
-            parsing_thread = ChangelogParsingThread(self.changelog_http_data)
-            parsing_thread.completed.connect(
-                lambda x: self.changelog_content.setHtml(x.getvalue()))
-            parsing_thread.start()
-
-        self.changelog_http_data = None
-        self.changelog_http_reply = None
-
-    def changelog_http_ready_read(self):
-        self.changelog_http_data.write(self.changelog_http_reply.readAll())
-
-    def changelog_dl_progress(self, bytes_read, total_bytes):
-        if total_bytes == -1:
-            total_bytes = bytes_read * 2
-        self.changelog_progress_bar.setMaximum(total_bytes)
-        self.changelog_progress_bar.setValue(bytes_read)
+        self.changelog_content.setHtml(_('<h3>Changelog is not available for experimental</h3>'))
 
     def branch_clicked(self, button):
         if button is self.stable_radio_button:
@@ -3289,136 +3251,6 @@ class UpdateGroupBox(QGroupBox):
         set_config_value('platform', config_value)
 
         self.refresh_builds()
-
-
-class ChangelogParsingThread(QThread):
-    completed = pyqtSignal(StringIO)
-
-    def __init__(self, changelog_http_data):
-        super(ChangelogParsingThread, self).__init__()
-        self.changelog_http_data = changelog_http_data
-
-    def __del__(self):
-        self.wait()
-
-    def get_results_by_platform(self, build_data):
-        regex = re.compile(r'.*\b'
-                           r'(?P<ui>Curses|Tiles),'
-                           r'(?P<plat>Linux_x64|Windows(?:_x64)?)'
-                           r'\b.*')
-
-        def platform_display_name(code_name):
-            code_name = regex.sub(r'\g<ui>-\g<plat>',
-                                  code_name.find('fullDisplayName').text)
-
-            if code_name == 'Tiles-Windows': return _('Windows x86')
-            if code_name == 'Tiles-Windows_x64': return _('Windows x64')
-            if code_name == 'Curses-Linux_x64': return _('All Platforms')
-            return None
-
-        build_platforms = build_data.findall(r'.//run')
-        build_platforms = filter(
-            lambda x: x.find('result') is not None and
-                      x.find('fullDisplayName') is not None and
-                      regex.search(x.find('fullDisplayName').text) is not None,
-            build_platforms
-        )
-
-        return tuple({'result': x.find('result').text,
-                      'platform': platform_display_name(x)}
-                     for x in build_platforms
-                     if platform_display_name(x) is not None)
-
-    @property
-    def app_locale(self):
-        return QApplication.instance().app_locale
-
-    def run(self):
-        changelog_html = StringIO()
-        self.changelog_http_data.seek(0)
-        try:
-            changelog_xml = xml.etree.ElementTree.fromstring(
-                                self.changelog_http_data.read())
-        except xml.etree.ElementTree.ParseError as err:
-            log_exception(*sys.exc_info())
-            changelog_html.write(
-                '<h3 style="color:red">{0}</h3>'.format(
-                    _('Error parsing Changelog data. Retry later.')))
-            self.completed.emit(changelog_html)
-            return
-
-
-        ### "((?<![\w#])(?=[\w#])|(?<=[\w#])(?![\w#]))" is like a \b
-        ### that accepts "#" as word char too.
-        ### regex used to match issues / PR IDs like "#43151"
-        id_regex = re.compile(r'((?<![\w#])(?=[\w#])|(?<=[\w#])(?![\w#]))'
-                              r'#(?P<id>\d+)\b')
-
-        for build_data in changelog_xml:
-            build_by_platform = self.get_results_by_platform(build_data)
-            if build_data.find('building').text == 'true':
-                build_status = 'IN_PROGRESS'
-            elif any(x['result'] == 'FAILURE' for x in build_by_platform):
-                build_status = 'FAILURE'
-            else:
-                ### possible "result" values: 'SUCCESS' or 'FAILURE'
-                build_status = 'SUCCESS'
-
-            build_timestamp = int(build_data.find('timestamp').text) // 1000
-            build_date_utc = datetime.utcfromtimestamp(build_timestamp)
-            build_date_utc = build_date_utc.replace(tzinfo=timezone.utc)
-            build_date_local = build_date_utc.astimezone(tz=None)
-            build_date_text = format_datetime(build_date_local,
-                format='long', locale=self.app_locale)
-
-            build_changes = build_data.findall(r'.//changeSet/item/msg')
-            build_changes = map(lambda x: html.escape(x.text.strip(), True),
-                                build_changes)
-            build_changes = list(unique(build_changes))
-            build_number = int(build_data.find('number').text)
-            build_desc = _('Build #{build_number}').format(build_number=build_number)
-            build_link = f'<a href="{cons.BUILD_CHANGES_URL(build_number)}">{build_desc}</a>'
-
-            if build_status == 'IN_PROGRESS':
-                changelog_html.write(
-                    '<h4>{0} - {1} <span style="color:purple">{2}</span></h4>'
-                    .format(
-                        build_link,
-                        build_date_text,
-                        _('build still in progress!')
-                    )
-                )
-            elif build_status == 'SUCCESS':
-                changelog_html.write(
-                    '<h4>{0} - {1}</h4>'
-                    .format(build_link, build_date_text)
-                )
-            else:   ### build_status == 'FAILURE'
-                changelog_html.write(
-                    '<h4>{0} - {1} <span style="color:red">{2} {3}</span></h4>'
-                    .format(
-                        build_link,
-                        build_date_text,
-                        _('but build failed for:'),
-                        ', '.join(map(lambda x: x['platform'],
-                                      filter(lambda y: y['result'] == 'FAILURE',
-                                             build_by_platform)))
-                    )
-                )
-
-            changelog_html.write('<ul>')
-            if len(build_changes) < 1:
-                changelog_html.write(
-                    '<li><span style="color:green">{0}</span></li>'
-                    .format(_('No changes, same code as previous build!')))
-            else:
-                for change in build_changes:
-                    link_repl = rf'<a href="{cons.CDDA_ISSUE_URL_ROOT}\g<id>">#\g<id></a>'
-                    change = id_regex.sub(link_repl, change)
-                    changelog_html.write(f'<li>{change}</li>')
-            changelog_html.write('</ul>')
-
-        self.completed.emit(changelog_html)
 
 
 # Recursively delete an entire directory tree while showing progress in a

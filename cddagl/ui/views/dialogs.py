@@ -19,7 +19,7 @@ from cddagl.functions import clean_qt_path, bitness
 from cddagl.i18n import proxy_gettext as _
 from cddagl.win32 import get_downloads_directory
 
-import markdown
+import markdown2
 
 logger = logging.getLogger('cddagl')
 
@@ -175,7 +175,7 @@ class FaqDialog(QDialog):
 
         m = _('<h2>CDDA Game Launcher Frequently asked questions (FAQ)</h2>')
 
-        html_faq = markdown.markdown(_('''
+        html_faq = markdown2.markdown(_('''
 ### Where is my previous version?
 
 Is it stored in the `previous_version` directory inside your game directory.
@@ -304,7 +304,7 @@ class AboutDialog(QDialog):
         m += _('<p>This software is distributed under the MIT License. That means this is'
                ' 100&#37; free software, completely free to use, modify and/or distribute.'
                ' If you like more details check the following boring legal stuff...</p>')
-        m += '<p>Copyright (c) 2015-2020 Rémy Roy</p>'
+        m += '<p>Copyright (c) 2015-2021 Rémy Roy</p>'
         m += ('<p>Permission is hereby granted, free of charge, to any person obtaining a copy'
               ' of this software and associated documentation files (the "Software"), to deal'
               ' in the Software without restriction, including without limitation the rights'
